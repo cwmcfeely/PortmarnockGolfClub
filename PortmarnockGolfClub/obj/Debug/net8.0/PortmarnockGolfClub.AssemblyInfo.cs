@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PortmarnockGolfClub")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+31e19e5f8f1d6d732e86bd26cdc91b915a6a8ffb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2914dd9a50615313269564debd3410185ae6a600")]
 [assembly: System.Reflection.AssemblyProductAttribute("PortmarnockGolfClub")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PortmarnockGolfClub")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
