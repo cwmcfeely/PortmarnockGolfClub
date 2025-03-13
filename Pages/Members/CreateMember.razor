@@ -1,0 +1,53 @@
+@page "/members/create"
+@using PortmarnockGolfClub.Models
+@using PortmarnockGolfClub.Services
+@inject MemberService MemberService
+@inject NavigationManager NavigationManager
+
+<h3>Add New Member</h3>
+
+<EditForm Model="@member" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group mb-3">
+        <label for="name">Name</label>
+        <InputText id="name" @bind-Value="member.Name" class="form-control" />
+        <ValidationMessage For="@(() => member.Name)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="member.Email" class="form-control" />
+        <ValidationMessage For="@(() => member.Email)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="gender">Gender</label>
+        <InputSelect id="gender" @bind-Value="member.Gender" class="form-control">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => member.Gender)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="handicap">Handicap</label>
+        <InputNumber id="handicap" @bind-Value="member.Handicap" class="form-control" />
+        <ValidationMessage For="@(() => member.Handicap)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="/members" class="btn btn-secondary">Cancel</a>
+</EditForm>
+
+@code {
+    private Member member = new Member();
+
+    private async Task HandleValidSubmit()
+    {
+        await MemberService.AddMemberAsync(member);
+        NavigationManager.NavigateTo("/members");
+    }
+}

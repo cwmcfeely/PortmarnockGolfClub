@@ -1,0 +1,67 @@
+@page "/members"
+@using PortmarnockGolfClub.Models
+@using PortmarnockGolfClub.Services
+@inject MemberService MemberService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Members List</h3>
+
+@if (members == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="mb-3">
+        <a href="/members/create" class="btn btn-primary">Add New Member</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Membership Number</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Gender</th>
+                <th>Handicap</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in members)
+            {
+                <tr>
+                    <td>@member.MembershipNumber</td>
+                    <td>@member.Name</td>
+                    <td>@member.Email</td>
+                    <td>@member.Gender</td>
+                    <td>@member.Handicap</td>
+                    <td>
+                        <a href="/members/edit/@member.MembershipNumber" class="btn btn-sm btn-warning">Edit</a>
+                        <button class="btn btn-sm btn-danger"
+                            @onclick="() => DeleteMember(member.MembershipNumber)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Member> members;
+
+    protected override async Task OnInitializedAsync()
+    {
+        members = await MemberService.GetAllMembersAsync();
+    }
+
+    private async Task DeleteMember(int membershipNumber)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this member?"))
+        {
+            await MemberService.DeleteMemberAsync(membershipNumber);
+            members = await MemberService.GetAllMembersAsync();
+        }
+    }
+}

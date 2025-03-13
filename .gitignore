@@ -1,0 +1,47 @@
+# Build directories
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+# IDE files
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.code-workspace
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+Logs/
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.editorconfig
+
+# Configuration files
+appsettings.*.json
+!appsettings.example.json
+!appsettings.Development.json
+
+# Migration backup files
+*.bak
+# NuGet packages
+packages/
+*.nupkg
+
+# User-specific files
+*.userprefs
+*.usertasks
