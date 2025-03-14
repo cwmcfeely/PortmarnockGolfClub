@@ -1,0 +1,200 @@
+@page "/bookings/create"
+@using PortmarnockGolfClub.Models
+@using PortmarnockGolfClub.Services
+@inject BookingService BookingService
+@inject MemberService MemberService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Book a Tee Time</h3>
+
+<EditForm Model="@booking" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group mb-3">
+        <label>Date:</label>
+        <InputDate @bind-Value="booking.Date" class="form-control" />
+        <button type="button" class="btn btn-secondary mt-2" @onclick="CheckAvailability">
+            Check Available Times
+        </button>
+    </div>
+
+    @if (availableSlots != null)
+    {
+        <div class="form-group mb-3">
+            <label>Time Slot:</label>
+            <select @bind="booking.TimeSlot" class="form-select">
+                <option value="">-- Select Time --</option>
+                @foreach (var slot in availableSlots)
+                {
+                    <option value="@slot">@slot</option>
+                }
+            </select>
+        </div>
+
+        <h4 class="mt-4">Player Information</h4>
+        <div class="card mb-3">
+            <div class="card-header">Main Player (You)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Name:</label>
+                            <input type="text" class="form-control" @bind="players[0].Name" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Handicap:</label>
+                            <input type="number" class="form-control" @bind="players[0].Handicap" max="54" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @for (int i = 1; i < players.Count; i++)
+        {
+            var index = i;
+            <div class="card mb-3">
+                <div class="card-header">
+                    Player @(index + 1)
+                    <button type="button" class="btn btn-sm btn-danger float-end" 
+                            @onclick="() => RemovePlayer(index)">
+                        Remove
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Name:</label>
+                                <input type="text" class="form-control" @bind="players[index].Name" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Handicap:</label>
+                                <input type="number" class="form-control" @bind="players[index].Handicap" max="54" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (players.Count < 4)
+        {
+            <button type="button" class="btn btn-secondary mb-3" @onclick="AddPlayer">
+                Add Player
+            </button>
+        }
+
+        <div>
+            <button type="submit" class="btn btn-primary">Book Tee Time</button>
+            <a href="/bookings" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </div>
+    }
+</EditForm>
+
+@code {
+    private Booking booking = new Booking { Date = DateTime.Today.AddDays(1) };
+    private List<PlayerInfo> players = new List<PlayerInfo> { new PlayerInfo() };
+    private List<string> availableSlots;
+    private Member currentMember;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // In a real app, get the current member from authentication
+        // For now, we'll assume member #1 is logged in
+        int currentMemberId = 1;
+        currentMember = await MemberService.GetMemberByIdAsync(currentMemberId);
+        
+        if (currentMember != null)
+        {
+            booking.MembershipNumber = currentMember.MembershipNumber;
+            players[0] = new PlayerInfo 
+            { 
+                Name = currentMember.Name, 
+                Handicap = currentMember.Handicap,
+                MembershipNumber = currentMember.MembershipNumber
+            };
+        }
+    }
+
+    private async Task CheckAvailability()
+    {
+        if (booking.Date < DateTime.Today)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Cannot book tee times in the past");
+            return;
+        }
+
+        // Check if member already has a booking for this date
+        bool hasBooking = await BookingService.MemberHasBookingOnDate(booking.MembershipNumber, booking.Date);
+        if (hasBooking)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "You already have a booking on this date. Members can only book one tee time per day.");
+            return;
+        }
+
+        availableSlots = await BookingService.GetAvailableSlotsAsync(booking.Date);
+    }
+
+    private void AddPlayer()
+    {
+        if (players.Count < 4)
+        {
+            players.Add(new PlayerInfo());
+        }
+    }
+
+    private void RemovePlayer(int index)
+    {
+        if (index > 0 && index < players.Count)
+        {
+            players.RemoveAt(index);
+        }
+    }
+
+private async Task HandleValidSubmit()
+{
+    if (string.IsNullOrEmpty(booking.TimeSlot))
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Please select a time slot");
+        return;
+    }
+
+    try
+    {
+        // Make sure player names are trimmed to avoid whitespace-only names
+        foreach (var player in players)
+        {
+            player.Name = player.Name?.Trim();
+        }
+        
+        // Filter out players with empty names
+        var validPlayers = players.Where(p => !string.IsNullOrWhiteSpace(p.Name)).ToList();
+        
+        if (validPlayers.Count == 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "At least one player is required");
+            return;
+        }
+        
+        // Explicitly serialize to PlayerDetails
+        booking.Players = validPlayers;
+        
+        // Create booking
+        await BookingService.CreateBookingAsync(booking);
+        
+        NavigationManager.NavigateTo("/bookings");
+    }
+    catch (Exception ex)
+    {
+        await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+    }
+}
+
+}

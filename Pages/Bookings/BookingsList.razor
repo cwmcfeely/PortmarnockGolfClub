@@ -1,0 +1,81 @@
+@page "/bookings"
+@using PortmarnockGolfClub.Models
+@using PortmarnockGolfClub.Services
+@inject BookingService BookingService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Tee Time Bookings</h3>
+
+<div class="form-group mb-3">
+    <label>Select Date:</label>
+    <input type="date" class="form-control" @bind="selectedDate" @bind:format="yyyy-MM-dd" />
+    <button class="btn btn-primary mt-2" @onclick="LoadBookings">View Bookings</button>
+    <a href="/bookings/create" class="btn btn-success mt-2 ms-2">Book a Tee Time</a>
+</div>
+
+@if (bookings == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (bookings.Count == 0)
+{
+    <p>No bookings found for this date.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Booked By</th>
+                <th>Players</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in bookings)
+            {
+                <tr>
+                    <td>@booking.TimeSlot</td>
+                    <td>Member #@booking.MembershipNumber</td>
+                    <td>
+                        @foreach (var player in booking.Players)
+                        {
+                            <div>@player.Name (Handicap: @player.Handicap)</div>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" @onclick="() => CancelBooking(booking.BookingID)">
+                            Cancel
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private DateTime selectedDate = DateTime.Today;
+    private List<Booking> bookings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+    }
+
+    private async Task LoadBookings()
+    {
+        bookings = await BookingService.GetBookingsForDateAsync(selectedDate);
+    }
+
+    private async Task CancelBooking(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to cancel this booking?"))
+        {
+            await BookingService.CancelBookingAsync(id);
+            await LoadBookings();
+        }
+    }
+}

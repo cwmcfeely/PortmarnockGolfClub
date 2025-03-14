@@ -14,7 +14,7 @@ builder.Services.AddDbContext<GolfClubDbContext>(options =>
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<MemberService>();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddScoped<BookingService>();
 
 var app = builder.Build();
 
