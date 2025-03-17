@@ -2,6 +2,7 @@
 @using PortmarnockGolfClub.Models
 @using PortmarnockGolfClub.Services
 @inject BookingService BookingService
+@inject MemberService MemberService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
@@ -38,7 +39,16 @@ else
             {
                 <tr>
                     <td>@booking.TimeSlot</td>
-                    <td>Member #@booking.MembershipNumber</td>
+                    <td>
+                        @if (booking.Players.Any())
+                        {
+                            @booking.Players[0].Name
+                        }
+                        else
+                        {
+                            @($"Member #{booking.MembershipNumber}")
+                        }
+                    </td>
                     <td>
                         @foreach (var player in booking.Players)
                         {

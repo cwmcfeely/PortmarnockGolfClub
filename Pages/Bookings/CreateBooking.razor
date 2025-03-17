@@ -1,6 +1,7 @@
 @page "/bookings/create"
 @using PortmarnockGolfClub.Models
 @using PortmarnockGolfClub.Services
+@using System.Text.Json
 @inject BookingService BookingService
 @inject MemberService MemberService
 @inject NavigationManager NavigationManager
@@ -41,13 +42,19 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Name:</label>
-                            <input type="text" class="form-control" @bind="players[0].Name" />
+                            <select class="form-select" @onchange="(e) => SelectPlayer(e, 0)">
+                                <option value="">-- Select Player --</option>
+                                @foreach (var member in allMembers)
+                                {
+                                    <option value="@member.MembershipNumber">@member.Name</option>
+                                }
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Handicap:</label>
-                            <input type="number" class="form-control" @bind="players[0].Handicap" max="54" />
+                            <input type="number" class="form-control" @bind="players[0].Handicap" readonly />
                         </div>
                     </div>
                 </div>
@@ -70,13 +77,19 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Name:</label>
-                                <input type="text" class="form-control" @bind="players[index].Name" />
+                                <select class="form-select" @onchange="(e) => SelectPlayer(e, index)">
+                                    <option value="">-- Select Player --</option>
+                                    @foreach (var member in allMembers)
+                                    {
+                                        <option value="@member.MembershipNumber">@member.Name</option>
+                                    }
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Handicap:</label>
-                                <input type="number" class="form-control" @bind="players[index].Handicap" max="54" />
+                                <input type="number" class="form-control" @bind="players[index].Handicap" readonly />
                             </div>
                         </div>
                     </div>
@@ -99,27 +112,71 @@
 </EditForm>
 
 @code {
-    private Booking booking = new Booking { Date = DateTime.Today.AddDays(1) };
+    // Initialize with empty JSON array for PlayerDetails
+    private Booking booking = new Booking { 
+        Date = DateTime.Today.AddDays(1),
+        PlayerDetails = "[]" // Initialize with empty array to fix validation
+    };
     private List<PlayerInfo> players = new List<PlayerInfo> { new PlayerInfo() };
     private List<string> availableSlots;
     private Member currentMember;
+    private List<Member> allMembers = new List<Member>();
 
     protected override async Task OnInitializedAsync()
     {
-        // In a real app, get the current member from authentication
-        // For now, we'll assume member #1 is logged in
-        int currentMemberId = 1;
+        // Fetch all members for dropdown selection
+        allMembers = await MemberService.GetAllMembersAsync();
+        
+        // Initialize with empty player info
+        players = new List<PlayerInfo> { new PlayerInfo() };
+        
+        // Set booking membership number
+        int currentMemberId = 1; // This would come from authentication in a real app
         currentMember = await MemberService.GetMemberByIdAsync(currentMemberId);
         
         if (currentMember != null)
         {
             booking.MembershipNumber = currentMember.MembershipNumber;
-            players[0] = new PlayerInfo 
-            { 
-                Name = currentMember.Name, 
-                Handicap = currentMember.Handicap,
-                MembershipNumber = currentMember.MembershipNumber
-            };
+        }
+        
+        // Initialize PlayerDetails with empty array
+        booking.PlayerDetails = JsonSerializer.Serialize(players);
+    }
+
+    private async Task SelectPlayer(ChangeEventArgs e, int playerIndex)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()))
+            return;
+            
+        var membershipNumber = Convert.ToInt32(e.Value);
+        
+        // Check if this player is already in another slot
+        bool isDuplicate = players
+            .Where((p, idx) => idx != playerIndex) // Exclude current slot from check
+            .Any(p => p.MembershipNumber == membershipNumber);
+            
+        if (isDuplicate)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "This player is already in your booking. Each player can only be added once.");
+            return;
+        }
+        
+        var selectedMember = allMembers.FirstOrDefault(m => m.MembershipNumber == membershipNumber);
+        
+        if (selectedMember != null)
+        {
+            players[playerIndex].Name = selectedMember.Name;
+            players[playerIndex].Handicap = selectedMember.Handicap;
+            players[playerIndex].MembershipNumber = selectedMember.MembershipNumber;
+            
+            // If this is the main player, update the booking's MembershipNumber
+            if (playerIndex == 0)
+            {
+                booking.MembershipNumber = selectedMember.MembershipNumber;
+            }
+            
+            // Update PlayerDetails whenever a player is selected
+            booking.PlayerDetails = JsonSerializer.Serialize(players);
         }
     }
 
@@ -147,6 +204,8 @@
         if (players.Count < 4)
         {
             players.Add(new PlayerInfo());
+            // Update PlayerDetails whenever a player is added
+            booking.PlayerDetails = JsonSerializer.Serialize(players);
         }
     }
 
@@ -155,46 +214,51 @@
         if (index > 0 && index < players.Count)
         {
             players.RemoveAt(index);
+            // Update PlayerDetails whenever a player is removed
+            booking.PlayerDetails = JsonSerializer.Serialize(players);
         }
     }
 
-private async Task HandleValidSubmit()
-{
-    if (string.IsNullOrEmpty(booking.TimeSlot))
+    private async Task HandleValidSubmit()
     {
-        await JSRuntime.InvokeVoidAsync("alert", "Please select a time slot");
-        return;
-    }
-
-    try
-    {
-        // Make sure player names are trimmed to avoid whitespace-only names
-        foreach (var player in players)
-        {
-            player.Name = player.Name?.Trim();
-        }
+        // Force serialization of player details before validation
+        booking.PlayerDetails = JsonSerializer.Serialize(players);
         
-        // Filter out players with empty names
-        var validPlayers = players.Where(p => !string.IsNullOrWhiteSpace(p.Name)).ToList();
-        
-        if (validPlayers.Count == 0)
+        if (string.IsNullOrEmpty(booking.TimeSlot))
         {
-            await JSRuntime.InvokeVoidAsync("alert", "At least one player is required");
+            await JSRuntime.InvokeVoidAsync("alert", "Please select a time slot");
             return;
         }
-        
-        // Explicitly serialize to PlayerDetails
-        booking.Players = validPlayers;
-        
-        // Create booking
-        await BookingService.CreateBookingAsync(booking);
-        
-        NavigationManager.NavigateTo("/bookings");
-    }
-    catch (Exception ex)
-    {
-        await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
-    }
-}
 
+        try
+        {
+            // Make sure player names are trimmed to avoid whitespace-only names
+            foreach (var player in players)
+            {
+                player.Name = player.Name?.Trim();
+            }
+            
+            // Filter out players with empty names
+            var validPlayers = players.Where(p => !string.IsNullOrWhiteSpace(p.Name)).ToList();
+            
+            if (validPlayers.Count == 0)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "At least one player is required");
+                return;
+            }
+            
+            // Explicitly serialize to PlayerDetails
+            booking.Players = validPlayers;
+            booking.PlayerDetails = JsonSerializer.Serialize(validPlayers);
+            
+            // Create booking
+            await BookingService.CreateBookingAsync(booking);
+            
+            NavigationManager.NavigateTo("/bookings");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
 }
