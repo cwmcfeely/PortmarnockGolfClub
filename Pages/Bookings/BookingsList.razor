@@ -55,6 +55,9 @@ else
                             <div>@player.Name (Handicap: @player.Handicap)</div>
                         }
                     </td>
+                    <button class="btn btn-sm btn-warning me-1" @onclick="() => EditBooking(booking.BookingID)">
+                        Edit
+                    </button>
                     <td>
                         <button class="btn btn-sm btn-danger" @onclick="() => CancelBooking(booking.BookingID)">
                             Cancel
@@ -88,4 +91,10 @@ else
             await LoadBookings();
         }
     }
+
+    private void EditBooking(int id)
+    {
+        NavigationManager.NavigateTo($"/bookings/edit/{id}");
+    }
+
 }

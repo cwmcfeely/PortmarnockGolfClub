@@ -92,7 +92,7 @@ namespace PortmarnockGolfClub.Services
         }
 
         // Update booking
-        public async Task UpdateBookingAsync(Booking booking)
+        public async Task<bool> UpdateBookingAsync(Booking booking)
         {
             // Validate player count
             if (booking.Players.Count > 4)
@@ -100,6 +100,7 @@ namespace PortmarnockGolfClub.Services
 
             _context.Entry(booking).State = EntityState.Modified;
             await _context.SaveChangesAsync();
+            return true;
         }
 
         // Cancel booking
