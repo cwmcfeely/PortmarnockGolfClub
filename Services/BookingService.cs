@@ -103,8 +103,8 @@ namespace PortmarnockGolfClub.Services
             return true;
         }
 
-        // Cancel booking
-        public async Task CancelBookingAsync(int id)
+        // Delete booking
+        public async Task DeleteBookingAsync(int id)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking != null)

@@ -13,8 +13,19 @@
 }
 else
 {
-    <div class="mb-3">
+    <div class="mb-3 d-flex justify-content-between">
         <a href="/members/create" class="btn btn-primary">Add New Member</a>
+
+        <form method="get">
+            <label for="sortOrder">Sort by:</label>
+            <select id="sortOrder" name="sortOrder" class="form-select" @onchange="OnSortChanged" value="@CurrentSort">
+                <option value="membershipnumber_asc" selected="@(CurrentSort == "membershipnumber_asc")">Membership Number</option>
+                <option value="name_asc" selected="@(CurrentSort == "name_asc")">Name (A-Z)</option>
+                <option value="name_desc" selected="@(CurrentSort == "name_desc")">Name (Z-A)</option>
+                <option value="handicap_asc" selected="@(CurrentSort == "handicap_asc")">Handicap (L-H)</option>
+                <option value="handicap_desc" selected="@(CurrentSort == "handicap_desc")">Handicap (H-L)</option>
+            </select>
+        </form>
     </div>
 
     <table class="table table-striped">
@@ -50,10 +61,57 @@ else
 
 @code {
     private List<Member> members;
+    // Sort name by default
+    private string CurrentSort { get; set; } = "membershipnumber_asc";
 
     protected override async Task OnInitializedAsync()
     {
-        members = await MemberService.GetAllMembersAsync();
+        await LoadMembers();
+    }
+
+    private async Task LoadMembers()
+    {
+        // Get all members from the service
+        var unsortedMembers = await MemberService.GetAllMembersAsync();
+
+        // Create a queryable from the list
+        IEnumerable<Member> members = unsortedMembers;
+
+        // Apply sorting based on CurrentSort using switch statement with cases
+        switch (CurrentSort)
+        {
+            case "name_asc":
+                members = members.OrderBy(m => m.Name);
+                break;
+            case "name_desc":
+                members = members.OrderByDescending(m => m.Name);
+                break;
+            case "handicap_asc":
+                members = members.OrderBy(m => m.Handicap);
+                break;
+            case "handicap_desc":
+                members = members.OrderByDescending(m => m.Handicap);
+                break;
+            case "membershipnumber_desc":
+                members = members.OrderByDescending(m => m.MembershipNumber);
+                break;
+            case "membershipnumber_asc":
+            default:
+                members = members.OrderBy(m => m.MembershipNumber);
+                break;
+        }
+
+        // Convert to list for display
+        this.members = members.ToList();
+    }
+
+    private async Task OnSortChanged(ChangeEventArgs e)
+    {
+        if (e.Value is string newSort)
+        {
+            CurrentSort = newSort;
+            await LoadMembers();
+        }
     }
 
     private async Task DeleteMember(int membershipNumber)
