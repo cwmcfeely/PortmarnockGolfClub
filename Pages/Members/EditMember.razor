@@ -4,35 +4,47 @@
 @inject MemberService MemberService
 @inject NavigationManager NavigationManager
 
+<!-- Page title -->
 <h3>Edit Member</h3>
 
+<!-- Conditional rendering based on whether member data has been loaded -->
 @if (member == null)
 {
+    <!-- Display loading message while fetching member data -->
     <p><em>Loading...</em></p>
 }
 else
 {
+    <!-- Edit form for member information -->
     <EditForm Model="@member" OnValidSubmit="HandleValidSubmit">
+        <!-- Enable validation using data annotations -->
         <DataAnnotationsValidator />
+        <!-- Display summary of all validation errors -->
         <ValidationSummary />
 
+        <!-- Membership Number field (read-only) -->
         <div class="form-group mb-3">
             <label for="membershipNumber">Membership Number</label>
             <InputNumber id="membershipNumber" @bind-Value="member.MembershipNumber" class="form-control" disabled />
         </div>
 
+        <!-- Name input field -->
         <div class="form-group mb-3">
             <label for="name">Name</label>
             <InputText id="name" @bind-Value="member.Name" class="form-control" />
+            <!-- Display validation messages for Name field -->
             <ValidationMessage For="@(() => member.Name)" />
         </div>
 
+        <!-- Email input field -->
         <div class="form-group mb-3">
             <label for="email">Email</label>
             <InputText id="email" @bind-Value="member.Email" class="form-control" />
+            <!-- Display validation messages for Email field -->
             <ValidationMessage For="@(() => member.Email)" />
         </div>
 
+        <!-- Gender selection dropdown -->
         <div class="form-group mb-3">
             <label for="gender">Gender</label>
             <InputSelect id="gender" @bind-Value="member.Gender" class="form-control">
@@ -40,15 +52,19 @@ else
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
             </InputSelect>
+            <!-- Display validation messages for Gender field -->
             <ValidationMessage For="@(() => member.Gender)" />
         </div>
 
+        <!-- Handicap input field -->
         <div class="form-group mb-3">
             <label for="handicap">Handicap</label>
             <InputNumber id="handicap" @bind-Value="member.Handicap" class="form-control" />
+            <!-- Display validation messages for Handicap field -->
             <ValidationMessage For="@(() => member.Handicap)" />
         </div>
 
+        <!-- Form submission and navigation buttons -->
         <div>
             <button type="submit" class="btn btn-success mt-2">Save</button>
             <a href="/members" class="btn btn-warning mt-2">Cancel</a>
@@ -57,19 +73,37 @@ else
 }
 
 @code {
+    /// <summary>
+    /// Parameter to capture the MembershipNumber from the route
+    /// </summary>
     [Parameter]
     public int MembershipNumber { get; set; }
 
+    /// <summary>
+    /// Member object to hold the data of the member being edited
+    /// </summary>
     private Member member = new Member();
 
+    /// <summary>
+    /// Initializes the component by loading the member data
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation</returns>
     protected override async Task OnInitializedAsync()
     {
+        // Fetch the member data using the MembershipNumber
+        // If not found, initialize with a new Member object
         member = await MemberService.GetMemberByIdAsync(MembershipNumber) ?? new Member();
     }
 
+    /// <summary>
+    /// Handles the form submission when it passes all validation rules
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation</returns>
     private async Task HandleValidSubmit()
     {
+        // Update the member information in the database
         await MemberService.UpdateMemberAsync(member);
+        // Redirect the user back to the members list page
         NavigationManager.NavigateTo("/members");
     }
 }

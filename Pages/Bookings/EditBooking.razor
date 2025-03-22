@@ -7,18 +7,22 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
+<!-- Page title -->
 <h3>Edit Tee Time Booking</h3>
 
+<!-- Loading indicator while fetching booking data -->
 @if (booking == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
+    <!-- Edit form for the booking -->
     <EditForm Model="@booking" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
+        <!-- Date selection and availability check -->
         <div class="form-group mb-3">
             <label>Date:</label>
             <InputDate @bind-Value="booking.Date" class="form-control" />
@@ -29,6 +33,7 @@ else
 
         @if (availableSlots != null)
         {
+            <!-- Time slot selection -->
             <div class="form-group mb-3">
                 <label>Time Slot:</label>
                 <select @bind="booking.TimeSlot" class="form-select">
@@ -40,7 +45,10 @@ else
                 </select>
             </div>
 
+            <!-- Player information section -->
             <h4 class="mt-4">Player Information</h4>
+
+            <!-- Main player (booking member) -->
             <div class="card mb-3">
                 <div class="card-header">Main Player (You)</div>
                 <div class="card-body">
@@ -71,6 +79,7 @@ else
                 </div>
             </div>
 
+            <!-- Additional players -->
             @for (int i = 1; i < players.Count; i++)
             {
                 var index = i;
@@ -109,6 +118,7 @@ else
                 </div>
             }
 
+            <!-- Add player button (max 4 players) -->
             @if (players.Count < 4)
             {
                 <button type="button" class="btn btn-success mt-2" @onclick="AddPlayer">
@@ -116,6 +126,7 @@ else
                 </button>
             }
 
+            <!-- Form submission and cancel buttons -->
             <div>
                 <button type="submit" class="btn btn-success mt-2">Update Booking</button>
                 <a href="/bookings" class="btn btn-warning mt-2">Cancel</a>
@@ -125,20 +136,24 @@ else
 }
 
 @code {
+    // Parameter to receive the BookingId from the route
     [Parameter]
     public int BookingId { get; set; }
 
+    // Properties to store booking data and state
     private Booking booking = new Booking();
     private List<PlayerInfo> players = new List<PlayerInfo>();
     private List<string> availableSlots = new List<string>();
     private List<Member> allMembers = new List<Member>();
     private string originalTimeSlot = string.Empty;
 
+    /// <summary>
+    /// Initializes the component and loads necessary data
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         // Fetch the booking to edit
         booking = await BookingService.GetBookingByIdAsync(BookingId);
-
         if (booking == null)
         {
             NavigationManager.NavigateTo("/bookings");
@@ -161,6 +176,9 @@ else
         availableSlots.Remove(originalTimeSlot);
     }
 
+    /// <summary>
+    /// Handles player selection and updates player information
+    /// </summary>
     private async Task SelectPlayer(ChangeEventArgs e, int playerIndex)
     {
         if (string.IsNullOrEmpty(e.Value?.ToString()))
@@ -198,6 +216,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Checks availability of time slots for the selected date
+    /// </summary>
     private async Task CheckAvailability()
     {
         if (booking.Date < DateTime.Today)
@@ -213,6 +234,9 @@ else
         availableSlots.Remove(originalTimeSlot);
     }
 
+    /// <summary>
+    /// Adds a new player to the booking
+    /// </summary>
     private void AddPlayer()
     {
         if (players.Count < 4)
@@ -222,6 +246,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Removes a player from the booking
+    /// </summary>
     private void RemovePlayer(int index)
     {
         if (index > 0 && index < players.Count)
@@ -231,6 +258,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Handles form submission and updates the booking
+    /// </summary>
     private async Task HandleValidSubmit()
     {
         // Force serialization of player details before validation

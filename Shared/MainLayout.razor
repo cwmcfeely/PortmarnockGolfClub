@@ -1,21 +1,31 @@
 ﻿@inherits LayoutComponentBase
 
-
+<!-- Main container for the entire page layout -->
 <div class="page">
+    <!-- Sidebar section -->
     <div class="sidebar">
+        <!-- Header of the sidebar with logo -->
         <div class="sidebar-header text-center py-3">
+            <!-- Club logo image -->
             <img src="Images/golf-logo.png" alt="Portmarnock Golf Club" style="max-width: 150px; height: auto;" />
         </div>
+        <!-- Navigation menu component -->
         <NavMenu />
     </div>
 
+    <!-- Main content area -->
     <main>
+        <!-- Top row containing page title and external link -->
         <div class="top-row px-4">
+            <!-- Page title component -->
             <PageTitle>Portmarnock Golf Club</PageTitle>
+            <!-- Link to the project's GitHub repository -->
             <a href="https://github.com/cwmcfeely/PortmarnockGolfClub" target="_blank">GitHub</a>
         </div>
 
+        <!-- Container for the main content -->
         <article class="content px-4">
+            <!-- Placeholder for the body content of child pages -->
             @Body
         </article>
     </main>

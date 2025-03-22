@@ -6,16 +6,20 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
+<!-- Page title -->
 <h3>Tee Time Bookings</h3>
 
+<!-- Booking filter and selection controls -->
 <div class="form-group mb-3">
     <div class="row">
+        <!-- Date selection -->
         <div class="col-md-4">
             <label>Select Date:</label>
             <input type="date" class="form-control" @bind="selectedDate" @bind:format="yyyy-MM-dd" />
             <button class="btn btn-success mt-2" @onclick="LoadBookings">View Bookings</button>
         </div>
 
+        <!-- Member filter dropdown -->
         <div class="col-md-4">
             <label>Filter by Member:</label>
             <select class="form-control" @bind="selectedMembershipNumber">
@@ -29,6 +33,7 @@
     </div>
 </div>
 
+<!-- Conditional rendering based on booking data -->
 @if (bookings == null)
 {
     <p><em>Loading...</em></p>
@@ -39,6 +44,7 @@ else if (bookings.Count == 0)
 }
 else
 {
+    <!-- Bookings table -->
     <table class="table table-striped">
         <thead>
             <tr>
@@ -70,6 +76,7 @@ else
                         }
                     </td>
                     <td>
+                        <!-- Edit and Delete buttons -->
                         <button class="btn btn-sm btn-warning me-1" @onclick="() => EditBooking(booking.BookingID)">
                             Edit
                         </button>
@@ -81,32 +88,44 @@ else
             }
         </tbody>
     </table>
-    <div class="=" col-md-4?">
+    <!-- Button to create a new booking -->
+    <div class="col-md-4">
         <a href="/bookings/create" class="btn btn-success mt-2">Book Tee Time</a>
     </div>
 }
 
 @code {
+    // Properties to store state
     private DateTime selectedDate = DateTime.Today;
     private List<Booking> bookings = new List<Booking>();
     private List<Member> allMembers = new List<Member>();
     private int? selectedMembershipNumber;
 
+    /// <summary>
+    /// Loads all members from the database
+    /// </summary>
     private async Task LoadMembers()
     {
         allMembers = await MemberService.GetAllMembersAsync();
     }
 
+    /// <summary>
+    /// Initializes the component
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadMembers();
         await LoadBookings();
     }
 
+    /// <summary>
+    /// Loads bookings based on selected date and member filter
+    /// </summary>
     private async Task LoadBookings()
     {
         var allBookings = await BookingService.GetBookingsForDateAsync(selectedDate);
 
+        // Filter by selected member if applicable
         if (selectedMembershipNumber.HasValue)
         {
             bookings = allBookings
@@ -119,6 +138,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Handles member selection change event
+    /// </summary>
     private async Task OnMemberSelectionChanged(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out int membershipNumber))
@@ -132,6 +154,9 @@ else
         await LoadBookings();
     }
 
+    /// <summary>
+    /// Deletes a booking after confirmation
+    /// </summary>
     private async Task DeleteBooking(int id)
     {
         if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to Delete this booking?"))
@@ -141,9 +166,11 @@ else
         }
     }
 
+    /// <summary>
+    /// Navigates to the edit page for a specific booking
+    /// </summary>
     private void EditBooking(int id)
     {
         NavigationManager.NavigateTo($"/bookings/edit/{id}");
     }
-
 }

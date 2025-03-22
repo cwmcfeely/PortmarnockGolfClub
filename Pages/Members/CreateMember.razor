@@ -4,24 +4,33 @@
 @inject MemberService MemberService
 @inject NavigationManager NavigationManager
 
+<!-- Page title -->
 <h3>Add New Member</h3>
 
+<!-- Form for creating a new member -->
 <EditForm Model="@member" OnValidSubmit="HandleValidSubmit">
+    <!-- Enables validation using data annotations -->
     <DataAnnotationsValidator />
+    <!-- Displays a summary of all validation errors -->
     <ValidationSummary />
 
+    <!-- Name input field -->
     <div class="form-group mb-3">
         <label for="name">Name</label>
         <InputText id="name" @bind-Value="member.Name" class="form-control" />
+        <!-- Displays validation messages specific to the Name field -->
         <ValidationMessage For="@(() => member.Name)" />
     </div>
 
+    <!-- Email input field -->
     <div class="form-group mb-3">
         <label for="email">Email</label>
         <InputText id="email" @bind-Value="member.Email" class="form-control" />
+        <!-- Displays validation messages specific to the Email field -->
         <ValidationMessage For="@(() => member.Email)" />
     </div>
 
+    <!-- Gender selection dropdown -->
     <div class="form-group mb-3">
         <label for="gender">Gender</label>
         <InputSelect id="gender" @bind-Value="member.Gender" class="form-control">
@@ -29,25 +38,37 @@
             <option value="Male">Male</option>
             <option value="Female">Female</option>
         </InputSelect>
+        <!-- Displays validation messages specific to the Gender field -->
         <ValidationMessage For="@(() => member.Gender)" />
     </div>
 
+    <!-- Handicap input field -->
     <div class="form-group mb-3">
         <label for="handicap">Handicap</label>
         <InputNumber id="handicap" @bind-Value="member.Handicap" class="form-control" />
+        <!-- Displays validation messages specific to the Handicap field -->
         <ValidationMessage For="@(() => member.Handicap)" />
     </div>
 
+    <!-- Submit button -->
     <button type="submit" class="btn btn-success mt-2">Save</button>
+    <!-- Cancel button that navigates back to the members list -->
     <a href="/members" class="btn btn-warning mt-2">Cancel</a>
 </EditForm>
 
 @code {
+    // Creates a new instance of the Member model to bind form data
     private Member member = new Member();
 
+    /// <summary>
+    /// Handles the form submission when it passes all validation rules
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation</returns>
     private async Task HandleValidSubmit()
     {
+        // Calls the MemberService to add the new member to the database
         await MemberService.AddMemberAsync(member);
+        // Redirects the user back to the members list page after successful creation
         NavigationManager.NavigateTo("/members");
     }
 }

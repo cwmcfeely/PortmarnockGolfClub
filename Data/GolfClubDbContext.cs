@@ -41,8 +41,7 @@ namespace PortmarnockGolfClub.Data
                 entity.Property(m => m.Email).IsRequired(); // Email is required
                 entity.Property(m => m.Gender).IsRequired(); // Gender is required
                 entity.Property(m => m.Handicap).IsRequired(); // Handicap is required
-
-                entity.HasIndex(m => m.Handicap); // Optimize queries based on handicap range
+                entity.HasIndex(m => m.Handicap); // Used for handicap range queries
             });
         }
     }

@@ -1,24 +1,31 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿<!-- Top navigation bar -->
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
+        <!-- Club name/logo acting as a link to the home page -->
         <a class="navbar-brand" href="">Portmarnock Golf Club</a>
+        <!-- Hamburger menu button for mobile view -->
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
 
+<!-- Collapsible navigation menu -->
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
+        <!-- Home page navigation link -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </div>
+        <!-- Members page navigation link -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="members">
                 <span class="oi oi-people" aria-hidden="true"></span> Members
             </NavLink>
         </div>
+        <!-- Bookings page navigation link -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="bookings">
                 <span class="oi oi-people" aria-hidden="true"></span> Bookings
@@ -28,10 +35,13 @@
 </div>
 
 @code {
+    // Determines if the navigation menu is collapsed
     private bool collapseNavMenu = true;
 
+    // CSS class for collapsing/expanding the navigation menu
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    // Toggles the navigation menu's collapsed state
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
