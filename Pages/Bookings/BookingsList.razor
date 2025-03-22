@@ -9,10 +9,24 @@
 <h3>Tee Time Bookings</h3>
 
 <div class="form-group mb-3">
-    <label>Select Date:</label>
-    <input type="date" class="form-control" @bind="selectedDate" @bind:format="yyyy-MM-dd" />
-    <button class="btn btn-primary mt-2" @onclick="LoadBookings">View Bookings</button>
-    <a href="/bookings/create" class="btn btn-success mt-2 ms-2">Book a Tee Time</a>
+    <div class="row">
+        <div class="col-md-4">
+            <label>Select Date:</label>
+            <input type="date" class="form-control" @bind="selectedDate" @bind:format="yyyy-MM-dd" />
+            <button class="btn btn-success mt-2" @onclick="LoadBookings">View Bookings</button>
+        </div>
+
+        <div class="col-md-4">
+            <label>Filter by Member:</label>
+            <select class="form-control" @bind="selectedMembershipNumber">
+                <option value="">All Members</option>
+                @foreach (var member in allMembers)
+                {
+                    <option value="@member.MembershipNumber">@member.Name</option>
+                }
+            </select>
+        </div>
+    </div>
 </div>
 
 @if (bookings == null)
@@ -67,20 +81,55 @@ else
             }
         </tbody>
     </table>
+    <div class="=" col-md-4?">
+        <a href="/bookings/create" class="btn btn-success mt-2">Book Tee Time</a>
+    </div>
 }
 
 @code {
     private DateTime selectedDate = DateTime.Today;
-    private List<Booking> bookings;
+    private List<Booking> bookings = new List<Booking>();
+    private List<Member> allMembers = new List<Member>();
+    private int? selectedMembershipNumber;
+
+    private async Task LoadMembers()
+    {
+        allMembers = await MemberService.GetAllMembersAsync();
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadMembers();
         await LoadBookings();
     }
 
     private async Task LoadBookings()
     {
-        bookings = await BookingService.GetBookingsForDateAsync(selectedDate);
+        var allBookings = await BookingService.GetBookingsForDateAsync(selectedDate);
+
+        if (selectedMembershipNumber.HasValue)
+        {
+            bookings = allBookings
+            .Where(b => b.MembershipNumber == selectedMembershipNumber.Value)
+            .ToList();
+        }
+        else
+        {
+            bookings = allBookings;
+        }
+    }
+
+    private async Task OnMemberSelectionChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int membershipNumber))
+        {
+            selectedMembershipNumber = membershipNumber;
+        }
+        else
+        {
+            selectedMembershipNumber = null;
+        }
+        await LoadBookings();
     }
 
     private async Task DeleteBooking(int id)

@@ -86,7 +86,7 @@ namespace PortmarnockGolfClub.Services
         }
 
         // Get booking by ID
-        public async Task<Booking> GetBookingByIdAsync(int id)
+        public async Task<Booking?> GetBookingByIdAsync(int id)
         {
             return await _context.Bookings.FindAsync(id);
         }
@@ -112,6 +112,14 @@ namespace PortmarnockGolfClub.Services
                 _context.Bookings.Remove(booking);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        // Method to get bookings by membership number
+        public async Task<List<Booking>> GetBookingsByMemberAsync(int membershipNumber)
+        {
+            return await _context.Bookings
+                .Where(b => b.MembershipNumber == membershipNumber)
+                .ToListAsync();
         }
     }
 }

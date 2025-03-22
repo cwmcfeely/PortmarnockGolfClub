@@ -16,7 +16,7 @@
     <div class="form-group mb-3">
         <label>Date:</label>
         <InputDate @bind-Value="booking.Date" class="form-control" />
-        <button type="button" class="btn btn-secondary mt-2" @onclick="CheckAvailability">
+        <button type="button" class="btn btn-success mt-2" @onclick="CheckAvailability">
             Check Available Times
         </button>
     </div>
@@ -99,14 +99,16 @@
 
         @if (players.Count < 4)
         {
-            <button type="button" class="btn btn-secondary mb-3" @onclick="AddPlayer">
+            <button type="button" class="btn btn-success mt-2" @onclick="AddPlayer">
                 Add Player
             </button>
         }
+        <div>
+        </div>
 
         <div>
-            <button type="submit" class="btn btn-primary">Book Tee Time</button>
-            <a href="/bookings" class="btn btn-outline-secondary ms-2">Delete</a>
+            <button type="submit" class="btn btn-success mt-2">Book Tee Time</button>
+            <a href="/members" class="btn btn-warning mt-2">Cancel</a>
         </div>
     }
 </EditForm>
@@ -118,8 +120,8 @@
         PlayerDetails = "[]" // Initialize with empty array to fix validation
     };
     private List<PlayerInfo> players = new List<PlayerInfo> { new PlayerInfo() };
-    private List<string> availableSlots;
-    private Member currentMember;
+    private List<string> availableSlots = new List<string>();
+    private Member currentMember = new Member();
     private List<Member> allMembers = new List<Member>();
 
     protected override async Task OnInitializedAsync()
@@ -235,7 +237,7 @@
             // Make sure player names are trimmed to avoid whitespace-only names
             foreach (var player in players)
             {
-                player.Name = player.Name?.Trim();
+                player.Name = player.Name?.Trim() ?? string.Empty;
             }
             
             // Filter out players with empty names

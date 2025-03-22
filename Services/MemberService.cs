@@ -22,7 +22,7 @@ namespace PortmarnockGolfClub.Services
         }
 
         // Get member by ID
-        public async Task<Member> GetMemberByIdAsync(int membershipNumber)
+        public async Task<Member?> GetMemberByIdAsync(int membershipNumber)
         {
             return await _context.Members.FindAsync(membershipNumber);
         }

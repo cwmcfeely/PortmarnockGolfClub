@@ -14,7 +14,6 @@
 else
 {
     <div class="mb-3 d-flex justify-content-between">
-        <a href="/members/create" class="btn btn-primary">Add New Member</a>
 
         <div class="d-flex align-items-center">
             <!-- #region  Sort Control-->
@@ -59,7 +58,7 @@ else
                 <th>Email</th>
                 <th>Gender</th>
                 <th>Handicap</th>
-                <th>Actions</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -80,6 +79,10 @@ else
             }
         </tbody>
     </table>
+    <!-- Add New Member Button to below table-->
+    <div class="d-flex justify-content-start">
+        <a href="/members/create" class="btn btn-success mt-2">Add New Member</a>
+    </div>
 }
 
 @code {
@@ -88,7 +91,7 @@ else
     private string selectedHandicap = "";
     // string for Gender filter
     private string selectedGender = "";
-    private List<Member> members;
+    private List<Member> members = new List<Member>();
     // Sort name by default
     private string CurrentSort { get; set; } = "membershipnumber_asc";
 
@@ -102,22 +105,26 @@ else
         // Get all members from the service
         var unsortedMembers = await MemberService.GetAllMembersAsync();
 
-        // Apply filtering based on selectedGender
-        var filteredMembersGender = selectedGender switch
+        // Start with all members
+        var filteredMembers = unsortedMembers;
+
+        // Apply gender filter if selected
+        if (!string.IsNullOrEmpty(selectedGender))
         {
-            "Male" => unsortedMembers.Where(m => m.Gender = "Male"),
-            "Female" => unsortedMembers.Where(m => m.Gender = "Female"),
-             _ => unsortedMembers
-        };
+            filteredMembers = filteredMembers.Where(m => m.Gender == selectedGender).ToList();
+        }
 
         // Apply filtering based on selectedHandicap
-        var filteredMembersHandicap = selectedHandicap switch
+        if (!string.IsNullOrEmpty(selectedHandicap))
         {
-            "below10" => unsortedMembers.Where(m => m.Handicap < 10),
-            "11to20" => unsortedMembers.Where(m => m.Handicap >= 11 && m.Handicap <= 20),
-            "above20" => unsortedMembers.Where(m => m.Handicap > 20),
-            _ => unsortedMembers
-        };
+            filteredMembers = selectedHandicap switch
+            {
+                "below10" => filteredMembers.Where(m => m.Handicap < 10).ToList(),
+                "11to20" => filteredMembers.Where(m => m.Handicap >= 11 && m.Handicap <= 20).ToList(),
+                "above20" => filteredMembers.Where(m => m.Handicap > 20).ToList(),
+                _ => filteredMembers
+            };
+        }
 
         // Create a queryable from the list
         IEnumerable<Member> members = filteredMembers;

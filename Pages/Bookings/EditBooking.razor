@@ -22,7 +22,7 @@ else
         <div class="form-group mb-3">
             <label>Date:</label>
             <InputDate @bind-Value="booking.Date" class="form-control" />
-            <button type="button" class="btn btn-secondary mt-2" @onclick="CheckAvailability">
+            <button type="button" class="btn btn-success mt-2" @onclick="CheckAvailability">
                 Check Available Times
             </button>
         </div>
@@ -111,14 +111,14 @@ else
 
             @if (players.Count < 4)
             {
-                <button type="button" class="btn btn-secondary mb-3" @onclick="AddPlayer">
+                <button type="button" class="btn btn-success mt-2" @onclick="AddPlayer">
                     Add Player
                 </button>
             }
 
             <div>
-                <button type="submit" class="btn btn-primary">Update Booking</button>
-                <a href="/bookings" class="btn btn-secondary ms-2">Return</a>
+                <button type="submit" class="btn btn-success mt-2">Update Booking</button>
+                <a href="/bookings" class="btn btn-warning mt-2">Cancel</a>
             </div>
         }
     </EditForm>
@@ -128,11 +128,11 @@ else
     [Parameter]
     public int BookingId { get; set; }
 
-    private Booking booking;
+    private Booking booking = new Booking();
     private List<PlayerInfo> players = new List<PlayerInfo>();
-    private List<string> availableSlots;
+    private List<string> availableSlots = new List<string>();
     private List<Member> allMembers = new List<Member>();
-    private string originalTimeSlot;
+    private string originalTimeSlot = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
