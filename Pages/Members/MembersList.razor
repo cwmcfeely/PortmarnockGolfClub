@@ -6,7 +6,7 @@
 @inject IJSRuntime JSRuntime
 
 <!-- Page title -->
-<h3>Portmarnock Golf Club Members</h3>
+<h1 class="header-title">Portmarnock Golf Club Members</h1>
 
 <!-- Conditional rendering based on whether member data has been loaded -->
 @if (members == null)
@@ -53,35 +53,37 @@ else
     </div>
 
     <!-- Table displaying member information -->
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Membership Number</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Gender</th>
-                <th>Handicap</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var member in members)
-            {
+    <div class="table-section">
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>@member.MembershipNumber</td>
-                    <td>@member.Name</td>
-                    <td>@member.Email</td>
-                    <td>@member.Gender</td>
-                    <td>@member.Handicap</td>
-                    <td>
-                        <a href="/members/edit/@member.MembershipNumber" class="btn btn-sm btn-warning">Edit</a>
-                        <button class="btn btn-sm btn-danger"
-                            @onclick="() => DeleteMember(member.MembershipNumber)">Delete</button>
-                    </td>
+                    <th>Membership Number</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Gender</th>
+                    <th>Handicap</th>
+                    <th></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var member in members)
+                {
+                    <tr>
+                        <td>@member.MembershipNumber</td>
+                        <td>@member.Name</td>
+                        <td>@member.Email</td>
+                        <td>@member.Gender</td>
+                        <td>@member.Handicap</td>
+                        <td>
+                            <a href="/members/edit/@member.MembershipNumber" class="btn btn-sm btn-warning">Edit</a>
+                            <button class="btn btn-sm btn-danger"
+                                @onclick="() => DeleteMember(member.MembershipNumber)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
     <!-- Button to add a new member -->
     <div class="d-flex justify-content-start">
         <a href="/members/create" class="btn btn-success mt-2">Add New Member</a>

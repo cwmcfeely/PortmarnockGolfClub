@@ -44,50 +44,52 @@ else if (bookings.Count == 0)
 }
 else
 {
-    <!-- Bookings table -->
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Booked By</th>
-                <th>Players</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var booking in bookings)
-            {
+    <div class="table-section">
+        <!-- Bookings table -->
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>@booking.TimeSlot</td>
-                    <td>
-                        @if (booking.Players.Any())
-                        {
-                            @booking.Players[0].Name
-                        }
-                        else
-                        {
-                            @($"Member #{booking.MembershipNumber}")
-                        }
-                    </td>
-                    <td>
-                        @foreach (var player in booking.Players)
-                        {
-                            <div>@player.Name (Handicap: @player.Handicap)</div>
-                        }
-                    </td>
-                    <td>
-                        <!-- Edit and Delete buttons -->
-                        <button class="btn btn-sm btn-warning me-1" @onclick="() => EditBooking(booking.BookingID)">
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteBooking(booking.BookingID)">
-                            Delete
-                        </button>
-                    </td>
+                    <th>Time</th>
+                    <th>Booked By</th>
+                    <th>Players</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var booking in bookings)
+                {
+                    <tr>
+                        <td>@booking.TimeSlot</td>
+                        <td>
+                            @if (booking.Players.Any())
+                            {
+                                @booking.Players[0].Name
+                            }
+                            else
+                            {
+                                @($"Member #{booking.MembershipNumber}")
+                            }
+                        </td>
+                        <td>
+                            @foreach (var player in booking.Players)
+                            {
+                                <div>@player.Name (Handicap: @player.Handicap)</div>
+                            }
+                        </td>
+                        <td>
+                            <!-- Edit and Delete buttons -->
+                            <button class="btn btn-sm btn-warning me-1" @onclick="() => EditBooking(booking.BookingID)">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteBooking(booking.BookingID)">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
     <!-- Button to create a new booking -->
     <div class="col-md-4">
         <a href="/bookings/create" class="btn btn-success mt-2">Book Tee Time</a>
