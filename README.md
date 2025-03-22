@@ -20,24 +20,12 @@ The PortmarnockGolfClub is a ASP.Net application built with Razor.
 
 ---
 
-### **Screenshots**
-Login Page
-![Login Page](assets/Login.png)
-SignUp Page
-![SignUp Page] (assets/SignUp.png)
-Categories Page
-![Categories] (assets/Categories.png)
-Plants
-![Plants] (assets/Plants.png)
----
-
 ### **📋 Tech Stack**
 The project is built using the following technologies:
 - **Framework:** ASP.NET Core Blazor
 - **Language:** C#
 - **Database:** Entity Framework Core with SQLite
 - **UI Design:** Razor Components with Bootstrap
-
 
 ---
 
