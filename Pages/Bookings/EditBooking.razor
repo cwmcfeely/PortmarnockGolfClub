@@ -50,7 +50,7 @@ else
 
             <!-- Main player (booking member) -->
             <div class="card mb-3">
-                <div class="card-header">Main Player (You)</div>
+                <div class="card-header">Lead Player</div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
@@ -153,7 +153,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         // Fetch the booking to edit
-        booking = await BookingService.GetBookingByIdAsync(BookingId);
+        booking = await BookingService.GetBookingByIdAsync(BookingId) ?? new Booking();
         if (booking == null)
         {
             NavigationManager.NavigateTo("/bookings");
@@ -164,7 +164,7 @@ else
         originalTimeSlot = booking.TimeSlot;
 
         // Load players from booking
-        players = booking.Players.ToList();
+        players = booking.Players?.ToList() ?? new List<PlayerInfo>();
 
         // Fetch all members for dropdown selection
         allMembers = await MemberService.GetAllMembersAsync();
@@ -181,26 +181,29 @@ else
     /// </summary>
     private async Task SelectPlayer(ChangeEventArgs e, int playerIndex)
     {
-        if (string.IsNullOrEmpty(e.Value?.ToString()))
-            return;
+        if (string.IsNullOrEmpty(e.Value?.ToString())) return;
 
         var membershipNumber = Convert.ToInt32(e.Value);
 
-        // Check if this player is already in another slot
-        bool isDuplicate = players
-        .Where((p, idx) => idx != playerIndex) // Exclude current slot from check
-        .Any(p => p.MembershipNumber == membershipNumber);
-
+        // Ensure each player is only added once
+        bool isDuplicate = players.Where((p, idx) => idx != playerIndex).Any(p => p.MembershipNumber == membershipNumber);
         if (isDuplicate)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "This player is already in your booking. Each player can only be added once.");
+            await JSRuntime.InvokeVoidAsync("alert", "This player is already in your booking.");
             return;
         }
 
         var selectedMember = allMembers.FirstOrDefault(m => m.MembershipNumber == membershipNumber);
-
         if (selectedMember != null)
         {
+            // Check if this member already has a booking on this date
+            bool hasBooking = await BookingService.MemberHasBookingOnDate(membershipNumber, booking.Date);
+            if (hasBooking)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Player {selectedMember.Name} already has a booking on this date.");
+                return;
+            }
+
             players[playerIndex].Name = selectedMember.Name;
             players[playerIndex].Handicap = selectedMember.Handicap;
             players[playerIndex].MembershipNumber = selectedMember.MembershipNumber;
@@ -211,7 +214,7 @@ else
                 booking.MembershipNumber = selectedMember.MembershipNumber;
             }
 
-            // Update PlayerDetails
+            // Update PlayerDetails whenever a player is selected
             booking.PlayerDetails = JsonSerializer.Serialize(players);
         }
     }
@@ -221,17 +224,29 @@ else
     /// </summary>
     private async Task CheckAvailability()
     {
+        // Log MembershipNumber and Date for debugging
+        Console.WriteLine($"Debug: MembershipNumber={booking.MembershipNumber}, Date={booking.Date}");
+
+        // Prevent booking past dates
         if (booking.Date < DateTime.Today)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Cannot book tee times in the past");
+            await JSRuntime.InvokeVoidAsync("alert", "Cannot book tee times in the past.");
             return;
         }
 
-        // Get available slots for the date
-        availableSlots = await BookingService.GetAvailableSlotsAsync(booking.Date);
+        // Check if any player already has a booking on the selected date
+        foreach (var player in players.Where(p => p.MembershipNumber.HasValue))
+        {
+            bool hasBooking = await BookingService.MemberHasBookingOnDate(player.MembershipNumber ?? 0, booking.Date);
+            if (hasBooking)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Player {player.Name} already has a booking on this date.");
+                return;
+            }
+        }
 
-        // Remove current time slot from the list to avoid duplication
-        availableSlots.Remove(originalTimeSlot);
+        // Fetch available time slots for the date
+        availableSlots = await BookingService.GetAvailableSlotsAsync(booking.Date);
     }
 
     /// <summary>
@@ -277,7 +292,7 @@ else
             // Make sure player names are trimmed to avoid whitespace-only names
             foreach (var player in players)
             {
-                player.Name = player.Name?.Trim();
+                player.Name = player.Name?.Trim() ?? string.Empty;
             }
 
             // Filter out players with empty names

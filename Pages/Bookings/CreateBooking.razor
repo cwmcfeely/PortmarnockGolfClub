@@ -39,7 +39,7 @@
 
         <!-- Section for main player (the user) -->
         <div class="card mb-3">
-            <div class="card-header">Main Player (You)</div>
+            <div class="card-header">Lead Player</div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
@@ -104,7 +104,7 @@
         {
             <button type="button" class="btn btn-success mt-2" @onclick="AddPlayer">Add Player</button>
         }
-        <div> 
+        <div>
         </div>
         <!-- Buttons for submitting or canceling the booking -->
         <div>
@@ -118,8 +118,7 @@
     // Booking model initialization with default values
     private Booking booking = new Booking
     {
-        Date = DateTime.Today.AddDays(1),
-        PlayerDetails = "[]" // Initialize as an empty JSON array
+        Date = DateTime.Today.AddDays(0)
     };
     private List<PlayerInfo> players = new List<PlayerInfo> { new PlayerInfo() }; // List of players
     private List<string> availableSlots = new List<string>(); // Available tee time slots
@@ -143,6 +142,7 @@
     private async Task SelectPlayer(ChangeEventArgs e, int playerIndex)
     {
         if (string.IsNullOrEmpty(e.Value?.ToString())) return;
+
         var membershipNumber = Convert.ToInt32(e.Value);
 
         // Ensure each player is only added once
@@ -152,6 +152,7 @@
             await JSRuntime.InvokeVoidAsync("alert", "This player is already in your booking.");
             return;
         }
+
         var selectedMember = allMembers.FirstOrDefault(m => m.MembershipNumber == membershipNumber);
         if (selectedMember != null)
         {
@@ -159,46 +160,43 @@
             players[playerIndex].Handicap = selectedMember.Handicap;
             players[playerIndex].MembershipNumber = selectedMember.MembershipNumber;
 
-            if (selectedMember != null)
-        {
-            players[playerIndex].Name = selectedMember.Name;
-            players[playerIndex].Handicap = selectedMember.Handicap;
-            players[playerIndex].MembershipNumber = selectedMember.MembershipNumber;
-            
             // If this is the main player, update the booking's MembershipNumber
             if (playerIndex == 0)
             {
                 booking.MembershipNumber = selectedMember.MembershipNumber;
             }
-            
+
             // Update PlayerDetails whenever a player is selected
             booking.PlayerDetails = JsonSerializer.Serialize(players);
         }
     }
 
+    // Check availability of tee times, based on the selected date and main player
     private async Task CheckAvailability()
     {
-        // Log MembershipNumber and Date for debugging
-        Console.WriteLine($"MembershipNumber: {booking.MembershipNumber}, Date: {booking.Date}");
-
         if (booking.Date < DateTime.Today)
         {
             await JSRuntime.InvokeVoidAsync("alert", "Cannot book tee times in the past");
             return;
         }
 
-        // Check if member already has a booking on the selected date
-        bool hasBooking = await BookingService.MemberHasBookingOnDate(booking.MembershipNumber, booking.Date);
-        if (hasBooking)
+        // Check if any player already has a booking on the selected date
+        foreach (var player in players.Where(p => p.MembershipNumber.HasValue))
         {
-            await JSRuntime.InvokeVoidAsync("alert", "You already have a booking on this date. Members can only book one tee time per day.");
-            return;
+            bool hasBooking = await BookingService.MemberHasBookingOnDate(player.MembershipNumber ?? 0, booking.Date);
+            if (hasBooking)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Player {player.Name} already has a booking on this date.");
+                return;
+            }
         }
 
-        // Fetch available time slots for the date
+        // Get available slots for the date
         availableSlots = await BookingService.GetAvailableSlotsAsync(booking.Date);
+
     }
 
+    // Add player if there are less than 4 players
     private void AddPlayer()
     {
         if (players.Count < 4)
@@ -209,6 +207,7 @@
         }
     }
 
+    // Remove player by index
     private void RemovePlayer(int index)
     {
         if (index > 0 && index < players.Count)
@@ -219,11 +218,12 @@
         }
     }
 
+    // Handle form submission
     private async Task HandleValidSubmit()
     {
         // Force serialization of player details before validation
         booking.PlayerDetails = JsonSerializer.Serialize(players);
-        
+
         if (string.IsNullOrEmpty(booking.TimeSlot))
         {
             await JSRuntime.InvokeVoidAsync("alert", "Please select a time slot");
@@ -237,24 +237,24 @@
             {
                 player.Name = player.Name?.Trim() ?? string.Empty;
             }
-            
+
             // Filter out players with empty names
             var validPlayers = players.Where(p => !string.IsNullOrWhiteSpace(p.Name)).ToList();
-            
+
             if (validPlayers.Count == 0)
             {
                 await JSRuntime.InvokeVoidAsync("alert", "At least one player is required");
                 return;
             }
-            
+
             // Explicitly serialize to PlayerDetails
             booking.Players = validPlayers;
             booking.PlayerDetails = JsonSerializer.Serialize(validPlayers);
-            
+
             // Create booking
-        await BookingService.CreateBookingAsync(booking);
-            
-        NavigationManager.NavigateTo("/bookings");
+            await BookingService.CreateBookingAsync(booking);
+
+            NavigationManager.NavigateTo("/bookings");
         }
         catch (Exception ex)
         {
