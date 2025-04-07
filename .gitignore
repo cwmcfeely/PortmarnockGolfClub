@@ -12,11 +12,6 @@ obj/
 *.suo
 *.code-workspace
 
-# Database files
-*.db
-*.db-shm
-*.db-wal
-
 # Logs
 Logs/
 *.log
